@@ -1,103 +1,104 @@
-import Image from "next/image";
+import Image from "next/image"
+import Link from "next/link"
+import { ArrowRight, BookOpenText, Zap, ShieldCheck, History, Sparkles } from 'lucide-react'
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
+import Summarizer from "@/components/summarizer"
+import Navbar from "@/components/navbar"
 
-export default function Home() {
+export default function Page() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <main className="min-h-dvh flex flex-col">
+      <Navbar />
+      <section className="relative overflow-hidden">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(75%_50%_at_50%_0%,rgba(249,115,22,0.20)_0%,rgba(249,115,22,0.06)_40%,transparent_70%)] dark:bg-[radial-gradient(75%_50%_at_50%_0%,rgba(249,115,22,0.25)_0%,rgba(249,115,22,0.08)_40%,transparent_70%)]" />
+        <div className="container relative mx-auto px-4 pt-12 md:pt-16 lg:pt-20">
+          <div className="flex flex-col-reverse items-center gap-10 lg:grid lg:grid-cols-2">
+            <div className="max-w-2xl">
+              <div className="inline-flex items-center gap-2 rounded-full border border-orange-200/80 bg-orange-50 px-3 py-1 text-sm text-orange-700 dark:border-orange-900/40 dark:bg-orange-950/40 dark:text-orange-300">
+                <Sparkles className="h-4 w-4" />
+                Built for speed — summarize in seconds
+              </div>
+              <h1 className="mt-4 text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
+                <span className="text-orange-600 dark:text-orange-500">FlashRead</span> — Read faster. Understand more.
+              </h1>
+              <p className="mt-4 text-lg text-muted-foreground">
+                Paste a URL or drop in your text. Get clean, focused summaries using RapidAPI extraction and Groq-powered AI when you need extra brains. Built with shadcn/ui and Tailwind for a delightful, accessible experience. [^1]
+              </p>
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <a href="#summarizer">
+                  <Button className="bg-orange-600 hover:bg-orange-700 text-white">
+                    Start summarizing
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </a>
+                <Link
+                  href="https://flashread.netlify.app/"
+                  target="_blank"
+                  className="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+                >
+                  Inspiration
+                </Link>
+              </div>
+              <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <Card className="border-orange-100/70 dark:border-orange-900/40">
+                  <CardContent className="flex flex-col items-center gap-2 p-4">
+                    <Zap className="h-5 w-5 text-orange-600 dark:text-orange-500" />
+                    <div className="text-sm font-medium">Rapid</div>
+                  </CardContent>
+                </Card>
+                <Card className="border-orange-100/70 dark:border-orange-900/40">
+                  <CardContent className="flex flex-col items-center gap-2 p-4">
+                    <BookOpenText className="h-5 w-5 text-orange-600 dark:text-orange-500" />
+                    <div className="text-sm font-medium">Clean summaries</div>
+                  </CardContent>
+                </Card>
+                <Card className="border-orange-100/70 dark:border-orange-900/40">
+                  <CardContent className="flex flex-col items-center gap-2 p-4">
+                    <History className="h-5 w-5 text-orange-600 dark:text-orange-500" />
+                    <div className="text-sm font-medium">Local history</div>
+                  </CardContent>
+                </Card>
+                <Card className="border-orange-100/70 dark:border-orange-900/40">
+                  <CardContent className="flex flex-col items-center gap-2 p-4">
+                    <ShieldCheck className="h-5 w-5 text-orange-600 dark:text-orange-500" />
+                    <div className="text-sm font-medium">Privacy-first</div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+            <div className="relative w-full">
+              <div className="relative mx-auto max-w-[520px] rounded-2xl border border-orange-200/60 bg-white/70 p-2 shadow-xl backdrop-blur dark:border-orange-900/30 dark:bg-zinc-900/60">
+                <Image
+                  src="/images/FlashRead.png"
+                  alt="FlashRead preview background"
+                  width={1040}
+                  height={720}
+                  className="aspect-[4/3] w-full rounded-xl object-cover"
+                />
+                <Badge className="absolute left-4 top-4 bg-orange-600 text-white hover:bg-orange-700">Preview</Badge>
+              </div>
+            </div>
+          </div>
+          <Separator className="mt-12 bg-orange-200/60 dark:bg-orange-900/40" />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+      </section>
+
+      <section id="summarizer" className="container mx-auto px-4 py-10 md:py-14">
+        <Summarizer defaultProvider="rapidapi" />
+      </section>
+
+      <footer className="mt-auto border-t py-8">
+        <div className="container mx-auto px-4 flex flex-col items-center justify-between gap-4 sm:flex-row">
+          <div className="flex items-center gap-2">
+            <Image src="/images/FlashRead.png" alt="FlashRead" width={28} height={28} />
+            <span className="font-semibold">FlashRead</span>
+          </div>
+          <p className="text-sm text-muted-foreground">Made with ❤️ using Next.js, shadcn/ui, and Tailwind</p>
+        </div>
       </footer>
-    </div>
-  );
+    </main>
+  )
 }
