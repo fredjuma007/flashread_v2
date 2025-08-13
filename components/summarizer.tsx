@@ -128,7 +128,7 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Summarize Content</span>
-            <Badge className="bg-orange-600 text-white hover:bg-orange-700">Free</Badge>
+            <Badge className="bg-orange-600 text-white hover:bg-orange-700">Beta</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
