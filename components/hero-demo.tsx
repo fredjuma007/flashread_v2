@@ -11,7 +11,7 @@ import MarkdownRenderer from "./markdown-renderer"
 const demoSteps = [
   {
     step: 1,
-    title: "Paste your content",
+    title: "Paste content",
     description: "URL or text",
     input: "https://techcrunch.com/ai-breakthrough-2024",
     active: true,
@@ -37,11 +37,10 @@ const sampleSummary = `# Revolutionary AI Breakthrough in 2024
 * Scientists achieve 95% accuracy in natural language understanding
 * New model processes information 10x faster than previous versions
 * Breakthrough enables real-time translation across 100+ languages
-* Applications span healthcare, education, and scientific research
 
 ## Impact
 
-The advancement represents a significant leap forward in artificial intelligence capabilities, with potential to transform how we interact with technology and process information globally.`
+The advancement represents a significant leap forward in artificial intelligence capabilities, with potential to transform how we interact with technology globally.`
 
 export default function HeroDemo() {
   const [currentStep, setCurrentStep] = useState(0)
@@ -73,50 +72,53 @@ export default function HeroDemo() {
   }, [currentStep, isAnimating])
 
   return (
-    <div className="relative mx-auto max-w-[520px]">
+    <div className="relative mx-auto w-full max-w-[400px] sm:max-w-[480px] lg:max-w-[520px]">
       {/* Floating elements */}
-      <div className="absolute -top-4 -right-4 z-10">
-        <div className="flex items-center gap-2 rounded-full bg-orange-600 px-3 py-1 text-xs font-medium text-white shadow-lg">
+      <div className="absolute -top-2 -right-2 sm:-top-4 sm:-right-4 z-10">
+        <div className="flex items-center gap-1 sm:gap-2 rounded-full bg-orange-600 px-2 sm:px-3 py-1 text-xs font-medium text-white shadow-lg">
           <Sparkles className="h-3 w-3" />
-          Live Demo
+          <span className="hidden sm:inline">Live Demo</span>
+          <span className="sm:hidden">Demo</span>
         </div>
       </div>
 
-      <div className="absolute -bottom-4 -left-4 z-10">
-        <div className="flex items-center gap-2 rounded-full bg-green-600 px-3 py-1 text-xs font-medium text-white shadow-lg">
+      <div className="absolute -bottom-2 -left-2 sm:-bottom-4 sm:-left-4 z-10">
+        <div className="flex items-center gap-1 sm:gap-2 rounded-full bg-green-600 px-2 sm:px-3 py-1 text-xs font-medium text-white shadow-lg">
           <Zap className="h-3 w-3" />
-          AI Powered
+          <span className="hidden sm:inline">AI Powered</span>
+          <span className="sm:hidden">AI</span>
         </div>
       </div>
 
       {/* Main demo card */}
       <Card className="relative overflow-hidden border-orange-200/60 bg-white/90 shadow-2xl backdrop-blur dark:border-orange-900/30 dark:bg-zinc-900/90">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center justify-between text-sm">
+        <CardHeader className="pb-2 sm:pb-3">
+          <CardTitle className="flex items-center justify-between text-xs sm:text-sm">
             <span className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-orange-600" />
-              FlashRead Demo
+              <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-orange-600" />
+              <span className="hidden sm:inline">FlashRead Demo</span>
+              <span className="sm:hidden">Demo</span>
             </span>
             <Badge variant="secondary" className="text-xs">
-              Step {currentStep + 1}/3
+              {currentStep + 1}/3
             </Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3 sm:space-y-4">
           {/* Input section */}
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Input
                 value={demoSteps[0].input}
                 readOnly
-                className="text-xs"
+                className="text-xs sm:text-sm"
                 style={{
                   background: currentStep === 0 ? "rgba(249, 115, 22, 0.1)" : "transparent",
                 }}
               />
               <Button
                 size="sm"
-                className="bg-orange-600 hover:bg-orange-700 text-white px-3"
+                className="bg-orange-600 hover:bg-orange-700 text-white px-2 sm:px-3 shrink-0"
                 disabled={currentStep !== 0}
               >
                 <ArrowRight className="h-3 w-3" />
@@ -125,11 +127,11 @@ export default function HeroDemo() {
           </div>
 
           {/* Progress steps */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between px-2">
             {demoSteps.map((step, index) => (
-              <div key={step.step} className="flex flex-col items-center gap-1">
+              <div key={step.step} className="flex flex-col items-center gap-1 flex-1">
                 <div
-                  className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium transition-all duration-500 ${
+                  className={`flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-full text-xs font-medium transition-all duration-500 ${
                     index <= currentStep
                       ? "bg-orange-600 text-white shadow-lg"
                       : "bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
@@ -139,7 +141,7 @@ export default function HeroDemo() {
                 </div>
                 <div className="text-center">
                   <div className="text-xs font-medium">{step.title}</div>
-                  <div className="text-xs text-muted-foreground">{step.description}</div>
+                  <div className="text-xs text-muted-foreground hidden sm:block">{step.description}</div>
                 </div>
               </div>
             ))}
@@ -147,11 +149,11 @@ export default function HeroDemo() {
 
           {/* Processing animation */}
           {currentStep === 1 && (
-            <div className="flex items-center justify-center py-4">
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 animate-bounce rounded-full bg-orange-600 [animation-delay:-0.3s]" />
-                <div className="h-2 w-2 animate-bounce rounded-full bg-orange-600 [animation-delay:-0.15s]" />
-                <div className="h-2 w-2 animate-bounce rounded-full bg-orange-600" />
+            <div className="flex items-center justify-center py-3 sm:py-4">
+              <div className="flex items-center gap-1 sm:gap-2">
+                <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 animate-bounce rounded-full bg-orange-600 [animation-delay:-0.3s]" />
+                <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 animate-bounce rounded-full bg-orange-600 [animation-delay:-0.15s]" />
+                <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 animate-bounce rounded-full bg-orange-600" />
               </div>
             </div>
           )}
@@ -159,8 +161,8 @@ export default function HeroDemo() {
           {/* Summary result */}
           {showSummary && (
             <div className="animate-in fade-in-50 slide-in-from-bottom-4 duration-500">
-              <div className="rounded-lg border bg-gradient-to-br from-orange-50/50 to-orange-100/30 p-4 dark:from-orange-950/20 dark:to-orange-900/10">
-                <div className="max-h-48 overflow-y-auto">
+              <div className="rounded-lg border bg-gradient-to-br from-orange-50/50 to-orange-100/30 p-3 sm:p-4 dark:from-orange-950/20 dark:to-orange-900/10">
+                <div className="max-h-32 sm:max-h-48 overflow-y-auto">
                   <MarkdownRenderer content={sampleSummary} />
                 </div>
               </div>
@@ -168,8 +170,11 @@ export default function HeroDemo() {
           )}
 
           {/* Call to action */}
-          <div className="pt-2 text-center">
-            <p className="text-xs text-muted-foreground">✨ Try it yourself with any URL or text below</p>
+          <div className="pt-1 sm:pt-2 text-center">
+            <p className="text-xs text-muted-foreground">
+              <span className="hidden sm:inline">✨ Try it yourself with any URL or text below</span>
+              <span className="sm:hidden">✨ Try it below</span>
+            </p>
           </div>
         </CardContent>
       </Card>

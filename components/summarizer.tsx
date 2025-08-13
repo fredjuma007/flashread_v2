@@ -123,15 +123,15 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid gap-4 md:gap-6 lg:grid-cols-2">
       <Card className="border-orange-200/70 dark:border-orange-900/40">
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+          <CardTitle className="flex items-center justify-between text-lg">
             <span>Summarize Content</span>
-            <Badge className="bg-orange-600 text-white hover:bg-orange-700">Beta</Badge>
+            <Badge className="bg-orange-600 text-white hover:bg-orange-700">Free</Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-5">
+        <CardContent className="space-y-4 md:space-y-5">
           <Tabs value={mode} onValueChange={(v) => setMode(v as "url" | "text")}>
             <TabsList className="grid grid-cols-2 w-full">
               <TabsTrigger
@@ -165,10 +165,10 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
               <Textarea
                 id="text-input"
                 placeholder="Paste your article, notes, or any text here..."
-                rows={8}
+                rows={6}
+                className="focus:border-orange-300 focus:ring-orange-200 dark:focus:border-orange-700 resize-none"
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                className="focus:border-orange-300 focus:ring-orange-200 dark:focus:border-orange-700"
               />
               <p className="text-xs text-muted-foreground">🚀 Perfect for documents, emails, or research notes</p>
             </TabsContent>
@@ -197,12 +197,12 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
               <RadioGroup
                 value={provider}
                 onValueChange={(v) => setProvider(v as Provider)}
-                className="grid grid-cols-2 gap-3"
+                className="grid grid-cols-1 sm:grid-cols-2 gap-3"
               >
                 <Label
                   htmlFor="rapidapi"
                   className={cn(
-                    "flex cursor-pointer items-center gap-3 rounded-lg border p-4 text-sm transition-all hover:bg-muted/50 [&:has(:checked)]:bg-muted",
+                    "flex cursor-pointer items-center gap-3 rounded-lg border p-3 sm:p-4 text-sm transition-all hover:bg-muted/50 [&:has(:checked)]:bg-muted",
                     provider === "rapidapi" &&
                       "border-orange-300 bg-orange-50 dark:border-orange-700 dark:bg-orange-950/30",
                   )}
@@ -219,7 +219,7 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
                 <Label
                   htmlFor="groq"
                   className={cn(
-                    "flex cursor-pointer items-center gap-3 rounded-lg border p-4 text-sm transition-all hover:bg-muted/50 [&:has(:checked)]:bg-muted",
+                    "flex cursor-pointer items-center gap-3 rounded-lg border p-3 sm:p-4 text-sm transition-all hover:bg-muted/50 [&:has(:checked)]:bg-muted",
                     provider === "groq" &&
                       "border-orange-300 bg-orange-50 dark:border-orange-700 dark:bg-orange-950/30",
                   )}
@@ -237,11 +237,11 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Button
               disabled={!canSubmit || loading}
               onClick={submit}
-              className="bg-orange-600 hover:bg-orange-700 text-white flex-1 sm:flex-none"
+              className="bg-orange-600 hover:bg-orange-700 text-white flex-1"
             >
               {loading ? (
                 <>
@@ -259,6 +259,7 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
                 setText("")
                 setSummary("")
               }}
+              className="sm:w-auto"
             >
               Clear
             </Button>
@@ -268,7 +269,7 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
 
       <Card>
         <CardHeader>
-          <CardTitle>Your Summary</CardTitle>
+          <CardTitle className="text-lg">Your Summary</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {loading ? (
@@ -280,15 +281,15 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
             </div>
           ) : summary ? (
             <>
-              <div className="rounded-lg border bg-gradient-to-br from-orange-50/50 to-orange-100/30 dark:from-orange-950/20 dark:to-orange-900/10 p-6">
+              <div className="rounded-lg border bg-gradient-to-br from-orange-50/50 to-orange-100/30 p-4 sm:p-6 dark:from-orange-950/20 dark:to-orange-900/10">
                 <MarkdownRenderer content={summary} />
               </div>
-              <div className="flex flex-wrap gap-2">
-                <Button variant="outline" onClick={copySummary} className="flex-1 sm:flex-none bg-transparent">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button variant="outline" onClick={copySummary} className="flex-1 bg-transparent">
                   <Copy className="mr-2 h-4 w-4" />
                   Copy
                 </Button>
-                <Button variant="outline" onClick={downloadMd} className="flex-1 sm:flex-none bg-transparent">
+                <Button variant="outline" onClick={downloadMd} className="flex-1 bg-transparent">
                   <Download className="mr-2 h-4 w-4" />
                   Download
                 </Button>
@@ -308,11 +309,12 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
             {history.length > 0 && (
               <Button variant="ghost" size="sm" onClick={clearHistory}>
                 <Trash2 className="mr-2 h-4 w-4" />
-                Clear
+                <span className="hidden sm:inline">Clear</span>
+                <span className="sm:hidden">Clear</span>
               </Button>
             )}
           </div>
-          <div className="space-y-3 max-h-64 overflow-y-auto">
+          <div className="space-y-3 max-h-48 sm:max-h-64 overflow-y-auto">
             {history.length === 0 && (
               <div className="text-center py-4">
                 <div className="text-2xl mb-1">🕐</div>
