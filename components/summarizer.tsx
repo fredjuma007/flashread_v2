@@ -11,10 +11,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
-import { Copy, Download, Loader2, Trash2, Settings2 } from "lucide-react"
+import { Copy, Download, Loader2, Trash2, Sparkles, Zap } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import MarkdownRenderer from "./markdown-renderer"
 
 type Provider = "rapidapi" | "groq"
 type Length = "short" | "medium" | "detailed"
@@ -41,7 +41,6 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
   const [loading, setLoading] = useState(false)
   const [summary, setSummary] = useState("")
   const [history, setHistory] = useState<HistoryItem[]>([])
-  const [showAdvanced, setShowAdvanced] = useState(false)
 
   useEffect(() => {
     try {
@@ -190,56 +189,52 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
               </Select>
             </div>
 
-            <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" className="w-full justify-between p-0 h-auto">
-                  <span className="flex items-center gap-2 text-sm">
-                    <Settings2 className="h-4 w-4" />
-                    Advanced Options
-                  </span>
-                  <span className="text-xs text-muted-foreground">{showAdvanced ? "Hide" : "Show"}</span>
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="space-y-3 pt-3">
-                <div className="grid gap-2">
-                  <Label>Processing Engine</Label>
-                  <RadioGroup
-                    value={provider}
-                    onValueChange={(v) => setProvider(v as Provider)}
-                    className="grid grid-cols-2 gap-3"
-                  >
-                    <Label
-                      htmlFor="rapidapi"
-                      className={cn(
-                        "flex cursor-pointer items-center gap-2 rounded-md border p-3 text-sm [&:has(:checked)]:bg-muted",
-                        provider === "rapidapi" &&
-                          "border-orange-300 bg-orange-50 dark:border-orange-700 dark:bg-orange-950/30",
-                      )}
-                    >
-                      <RadioGroupItem id="rapidapi" value="rapidapi" />
-                      <div>
-                        <div className="font-medium">Flashread (legacy)</div>
-                        <div className="text-xs text-muted-foreground">Best for URLs</div>
-                      </div>
-                    </Label>
-                    <Label
-                      htmlFor="groq"
-                      className={cn(
-                        "flex cursor-pointer items-center gap-2 rounded-md border p-3 text-sm [&:has(:checked)]:bg-muted",
-                        provider === "groq" &&
-                          "border-orange-300 bg-orange-50 dark:border-orange-700 dark:bg-orange-950/30",
-                      )}
-                    >
-                      <RadioGroupItem id="groq" value="groq" />
-                      <div>
-                        <div className="font-medium">Groq AI</div>
-                        <div className="text-xs text-muted-foreground">Best for text</div>
-                      </div>
-                    </Label>
-                  </RadioGroup>
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
+            <div className="grid gap-3">
+              <Label className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-orange-600 dark:text-orange-500" />
+                Processing Engine
+              </Label>
+              <RadioGroup
+                value={provider}
+                onValueChange={(v) => setProvider(v as Provider)}
+                className="grid grid-cols-2 gap-3"
+              >
+                <Label
+                  htmlFor="rapidapi"
+                  className={cn(
+                    "flex cursor-pointer items-center gap-3 rounded-lg border p-4 text-sm transition-all hover:bg-muted/50 [&:has(:checked)]:bg-muted",
+                    provider === "rapidapi" &&
+                      "border-orange-300 bg-orange-50 dark:border-orange-700 dark:bg-orange-950/30",
+                  )}
+                >
+                  <RadioGroupItem id="rapidapi" value="rapidapi" />
+                  <div className="flex-1">
+                    <div className="font-medium flex items-center gap-2">
+                      <Zap className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      RapidAPI
+                    </div>
+                    <div className="text-xs text-muted-foreground">Best for web articles</div>
+                  </div>
+                </Label>
+                <Label
+                  htmlFor="groq"
+                  className={cn(
+                    "flex cursor-pointer items-center gap-3 rounded-lg border p-4 text-sm transition-all hover:bg-muted/50 [&:has(:checked)]:bg-muted",
+                    provider === "groq" &&
+                      "border-orange-300 bg-orange-50 dark:border-orange-700 dark:bg-orange-950/30",
+                  )}
+                >
+                  <RadioGroupItem id="groq" value="groq" />
+                  <div className="flex-1">
+                    <div className="font-medium flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                      Groq AI
+                    </div>
+                    <div className="text-xs text-muted-foreground">Best for custom text</div>
+                  </div>
+                </Label>
+              </RadioGroup>
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -285,8 +280,8 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
             </div>
           ) : summary ? (
             <>
-              <div className="rounded-lg border bg-muted/30 p-4">
-                <pre className="whitespace-pre-wrap break-words text-sm leading-relaxed font-sans">{summary}</pre>
+              <div className="rounded-lg border bg-gradient-to-br from-orange-50/50 to-orange-100/30 dark:from-orange-950/20 dark:to-orange-900/10 p-6">
+                <MarkdownRenderer content={summary} />
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" onClick={copySummary} className="flex-1 sm:flex-none bg-transparent">
@@ -340,8 +335,8 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
                   <summary className="cursor-pointer text-xs text-orange-600 dark:text-orange-400 hover:underline">
                     View summary
                   </summary>
-                  <div className="mt-2 p-2 bg-muted/50 rounded text-xs">
-                    <pre className="whitespace-pre-wrap break-words font-sans">{h.summary}</pre>
+                  <div className="mt-2 p-3 bg-muted/50 rounded-lg">
+                    <MarkdownRenderer content={h.summary} />
                   </div>
                 </details>
               </div>
