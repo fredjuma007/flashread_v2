@@ -1,6 +1,6 @@
-import { NextRequest } from "next/server"
+import type { NextRequest } from "next/server"
 import { generateText } from "ai"
-import { groq } from "@ai-sdk/groq"
+import { createGroq } from "@ai-sdk/groq"
 
 type Body = {
   mode: "url" | "text"
@@ -26,12 +26,12 @@ export async function POST(req: NextRequest) {
           return await r.text()
         })
         const textContent = htmlToText(html).slice(0, 28000) // keep request small-ish
+        const groq = createGroq({ apiKey: groqKey })
         const { text: out } = await generateText({
-          model: groq({ apiKey: groqKey })("llama-3.1-70b-versatile"),
+          model: groq("llama-3.1-8b-instant"),
           system:
             "You are FlashRead, an expert summarizer. Produce concise, well-structured Markdown with headings and bullet points. Avoid fluff.",
           prompt: buildPrompt({ mode, length, text: textContent, url }),
-          maxTokens: 1200,
           temperature: 0.2,
         })
         return Response.json({ summary: out, provider: "groq" })
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
             "X-RapidAPI-Host": "article-extractor-and-summarizer.p.rapidapi.com",
           },
         })
-        const data = await res.json().catch(() => ({} as any))
+        const data = await res.json().catch(() => ({}) as any)
         if (!res.ok) {
           // Optional fallback to Groq if available
           if (groqKey) {
@@ -59,17 +59,20 @@ export async function POST(req: NextRequest) {
               return await r.text()
             })
             const textContent = htmlToText(html).slice(0, 28000)
+            const groq = createGroq({ apiKey: groqKey })
             const { text: out } = await generateText({
-              model: groq({ apiKey: groqKey })("llama-3.1-70b-versatile"),
+              model: groq("llama-3.1-8b-instant"),
               system:
                 "You are FlashRead, an expert summarizer. Produce concise, well-structured Markdown with headings and bullet points. Avoid fluff.",
               prompt: buildPrompt({ mode, length, text: textContent, url }),
-              maxTokens: 1200,
               temperature: 0.2,
             })
             return Response.json({ summary: out, provider: "groq" })
           }
-          return Response.json({ error: data?.message || "RapidAPI summarization failed" }, { status: res.status || 500 })
+          return Response.json(
+            { error: data?.message || "RapidAPI summarization failed" },
+            { status: res.status || 500 },
+          )
         }
         const summary = data?.summary || data?.summary_text || data?.result || ""
         if (!summary) {
@@ -82,15 +85,19 @@ export async function POST(req: NextRequest) {
       if (!text) return Response.json({ error: "Missing text" }, { status: 400 })
       if (provider === "rapidapi") {
         // Some RapidAPI endpoints don't support raw text well; prefer Groq for text.
-        if (!groqKey) return Response.json({ error: "RapidAPI may not support raw text; provide Groq key or switch to Groq provider." }, { status: 400 })
+        if (!groqKey)
+          return Response.json(
+            { error: "RapidAPI may not support raw text; provide Groq key or switch to Groq provider." },
+            { status: 400 },
+          )
       }
       if (!groqKey) return Response.json({ error: "Missing Groq key" }, { status: 400 })
+      const groq = createGroq({ apiKey: groqKey })
       const { text: out } = await generateText({
-        model: groq({ apiKey: groqKey })("llama-3.1-70b-versatile"),
+        model: groq("llama-3.1-8b-instant"),
         system:
           "You are FlashRead, an expert summarizer. Produce concise, well-structured Markdown with headings and bullet points. Avoid fluff.",
         prompt: buildPrompt({ mode, length, text }),
-        maxTokens: 900,
         temperature: 0.2,
       })
       return Response.json({ summary: out, provider: "groq" })

@@ -11,9 +11,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
-import { Copy, Download, Loader2, Trash2 } from "lucide-react"
+import { Copy, Download, Loader2, Trash2, Settings2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
 type Provider = "rapidapi" | "groq"
 type Length = "short" | "medium" | "detailed"
@@ -40,6 +41,7 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
   const [loading, setLoading] = useState(false)
   const [summary, setSummary] = useState("")
   const [history, setHistory] = useState<HistoryItem[]>([])
+  const [showAdvanced, setShowAdvanced] = useState(false)
 
   useEffect(() => {
     try {
@@ -61,8 +63,8 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-rapidapi-key": localStorage.getItem("flashread_rapidapi_key") || "",
-          "x-groq-key": localStorage.getItem("flashread_groq_key") || "",
+          "x-rapidapi-key": process.env.NEXT_PUBLIC_RAPIDAPI_KEY || "",
+          "x-groq-key": process.env.NEXT_PUBLIC_GROQ_KEY || "",
         },
         body: JSON.stringify({
           mode,
@@ -90,7 +92,7 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
       const newHistory = [item, ...history].slice(0, 50)
       setHistory(newHistory)
       localStorage.setItem(LS_HISTORY, JSON.stringify(newHistory))
-      toast.success(`Summarized with ${data.provider}`)
+      toast.success(`✨ Summary ready! Used ${data.provider}`)
     } catch (err: any) {
       toast.error(err.message ?? "Something went wrong")
     } finally {
@@ -101,7 +103,7 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
   const copySummary = async () => {
     if (!summary) return
     await navigator.clipboard.writeText(summary)
-    toast.success("Summary copied to clipboard")
+    toast.success("📋 Copied to clipboard!")
   }
 
   const downloadMd = () => {
@@ -112,11 +114,13 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
     a.download = "flashread-summary.md"
     a.click()
     URL.revokeObjectURL(a.href)
+    toast.success("📄 Downloaded as Markdown!")
   }
 
   const clearHistory = () => {
     localStorage.removeItem(LS_HISTORY)
     setHistory([])
+    toast.success("🗑️ History cleared!")
   }
 
   return (
@@ -124,15 +128,25 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
       <Card className="border-orange-200/70 dark:border-orange-900/40">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>Summarize</span>
-            <Badge className="bg-orange-600 text-white hover:bg-orange-700">Beta</Badge>
+            <span>Summarize Content</span>
+            <Badge className="bg-orange-600 text-white hover:bg-orange-700">Free</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
           <Tabs value={mode} onValueChange={(v) => setMode(v as "url" | "text")}>
-            <TabsList className="grid grid-cols-2">
-              <TabsTrigger value="url">URL</TabsTrigger>
-              <TabsTrigger value="text">Text</TabsTrigger>
+            <TabsList className="grid grid-cols-2 w-full">
+              <TabsTrigger
+                value="url"
+                className="data-[state=active]:bg-orange-100 data-[state=active]:text-orange-900 dark:data-[state=active]:bg-orange-950 dark:data-[state=active]:text-orange-100"
+              >
+                🔗 URL
+              </TabsTrigger>
+              <TabsTrigger
+                value="text"
+                className="data-[state=active]:bg-orange-100 data-[state=active]:text-orange-900 dark:data-[state=active]:bg-orange-950 dark:data-[state=active]:text-orange-100"
+              >
+                📝 Text
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="url" className="space-y-3">
               <Label htmlFor="url-input">Article URL</Label>
@@ -141,71 +155,98 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
                 placeholder="https://example.com/blog-post"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
+                className="focus:border-orange-300 focus:ring-orange-200 dark:focus:border-orange-700"
               />
               <p className="text-xs text-muted-foreground">
-                We’ll use RapidAPI to extract content and produce a clean summary.
+                ✨ We'll extract and summarize the main content automatically
               </p>
             </TabsContent>
             <TabsContent value="text" className="space-y-3">
-              <Label htmlFor="text-input">Paste your text</Label>
+              <Label htmlFor="text-input">Your Text</Label>
               <Textarea
                 id="text-input"
-                placeholder="Paste article or notes here..."
-                rows={10}
+                placeholder="Paste your article, notes, or any text here..."
+                rows={8}
                 value={text}
                 onChange={(e) => setText(e.target.value)}
+                className="focus:border-orange-300 focus:ring-orange-200 dark:focus:border-orange-700"
               />
-              <p className="text-xs text-muted-foreground">We’ll use Groq for fast, high-quality summaries.</p>
+              <p className="text-xs text-muted-foreground">🚀 Perfect for documents, emails, or research notes</p>
             </TabsContent>
           </Tabs>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-4">
             <div className="grid gap-2">
-              <Label>Provider</Label>
-              <RadioGroup value={provider} onValueChange={(v) => setProvider(v as Provider)} className="flex gap-3">
-                <Label
-                  htmlFor="rapidapi"
-                  className={cn(
-                    "flex cursor-pointer items-center gap-2 rounded-md border p-2 [&:has(:checked)]:bg-muted",
-                    provider === "rapidapi" && "border-orange-300 dark:border-orange-700",
-                  )}
-                >
-                  <RadioGroupItem id="rapidapi" value="rapidapi" />
-                  RapidAPI
-                </Label>
-                <Label
-                  htmlFor="groq"
-                  className={cn(
-                    "flex cursor-pointer items-center gap-2 rounded-md border p-2 [&:has(:checked)]:bg-muted",
-                    provider === "groq" && "border-orange-300 dark:border-orange-700",
-                  )}
-                >
-                  <RadioGroupItem id="groq" value="groq" />
-                  Groq
-                </Label>
-              </RadioGroup>
-            </div>
-
-            <div className="grid gap-2">
-              <Label>Length</Label>
+              <Label>Summary Length</Label>
               <Select value={length} onValueChange={(v) => setLength(v as Length)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Length" />
+                <SelectTrigger className="w-full focus:border-orange-300 focus:ring-orange-200 dark:focus:border-orange-700">
+                  <SelectValue placeholder="Choose length" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="short">Short</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="detailed">Detailed</SelectItem>
+                  <SelectItem value="short">⚡ Quick (3-4 sentences)</SelectItem>
+                  <SelectItem value="medium">📖 Balanced (6-8 sentences)</SelectItem>
+                  <SelectItem value="detailed">🔍 Detailed (10-12 sentences)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
+            <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full justify-between p-0 h-auto">
+                  <span className="flex items-center gap-2 text-sm">
+                    <Settings2 className="h-4 w-4" />
+                    Advanced Options
+                  </span>
+                  <span className="text-xs text-muted-foreground">{showAdvanced ? "Hide" : "Show"}</span>
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-3 pt-3">
+                <div className="grid gap-2">
+                  <Label>Processing Engine</Label>
+                  <RadioGroup
+                    value={provider}
+                    onValueChange={(v) => setProvider(v as Provider)}
+                    className="grid grid-cols-2 gap-3"
+                  >
+                    <Label
+                      htmlFor="rapidapi"
+                      className={cn(
+                        "flex cursor-pointer items-center gap-2 rounded-md border p-3 text-sm [&:has(:checked)]:bg-muted",
+                        provider === "rapidapi" &&
+                          "border-orange-300 bg-orange-50 dark:border-orange-700 dark:bg-orange-950/30",
+                      )}
+                    >
+                      <RadioGroupItem id="rapidapi" value="rapidapi" />
+                      <div>
+                        <div className="font-medium">Flashread (legacy)</div>
+                        <div className="text-xs text-muted-foreground">Best for URLs</div>
+                      </div>
+                    </Label>
+                    <Label
+                      htmlFor="groq"
+                      className={cn(
+                        "flex cursor-pointer items-center gap-2 rounded-md border p-3 text-sm [&:has(:checked)]:bg-muted",
+                        provider === "groq" &&
+                          "border-orange-300 bg-orange-50 dark:border-orange-700 dark:bg-orange-950/30",
+                      )}
+                    >
+                      <RadioGroupItem id="groq" value="groq" />
+                      <div>
+                        <div className="font-medium">Groq AI</div>
+                        <div className="text-xs text-muted-foreground">Best for text</div>
+                      </div>
+                    </Label>
+                  </RadioGroup>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
           </div>
 
           <div className="flex flex-wrap gap-2">
             <Button
               disabled={!canSubmit || loading}
               onClick={submit}
-              className="bg-orange-600 hover:bg-orange-700 text-white"
+              className="bg-orange-600 hover:bg-orange-700 text-white flex-1 sm:flex-none"
             >
               {loading ? (
                 <>
@@ -213,7 +254,7 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
                   Summarizing...
                 </>
               ) : (
-                "Summarize"
+                <>✨ Summarize</>
               )}
             </Button>
             <Button
@@ -224,7 +265,7 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
                 setSummary("")
               }}
             >
-              Reset
+              Clear
             </Button>
           </div>
         </CardContent>
@@ -232,64 +273,80 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
 
       <Card>
         <CardHeader>
-          <CardTitle>Result</CardTitle>
+          <CardTitle>Your Summary</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {loading ? (
-            <div className="space-y-2">
+            <div className="space-y-3">
+              <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-4/5" />
+              <Skeleton className="h-4 w-3/4" />
               <Skeleton className="h-4 w-2/3" />
-              <Skeleton className="h-4 w-3/5" />
-              <Skeleton className="h-4 w-1/2" />
             </div>
           ) : summary ? (
             <>
-              <article className="prose max-w-none dark:prose-invert">
-                <pre className="whitespace-pre-wrap break-words text-sm leading-relaxed">{summary}</pre>
-              </article>
+              <div className="rounded-lg border bg-muted/30 p-4">
+                <pre className="whitespace-pre-wrap break-words text-sm leading-relaxed font-sans">{summary}</pre>
+              </div>
               <div className="flex flex-wrap gap-2">
-                <Button variant="outline" onClick={copySummary}>
+                <Button variant="outline" onClick={copySummary} className="flex-1 sm:flex-none bg-transparent">
                   <Copy className="mr-2 h-4 w-4" />
                   Copy
                 </Button>
-                <Button variant="outline" onClick={downloadMd}>
+                <Button variant="outline" onClick={downloadMd} className="flex-1 sm:flex-none bg-transparent">
                   <Download className="mr-2 h-4 w-4" />
-                  Export .md
+                  Download
                 </Button>
               </div>
             </>
           ) : (
-            <p className="text-sm text-muted-foreground">Your summary will appear here.</p>
+            <div className="text-center py-8">
+              <div className="text-4xl mb-2">📚</div>
+              <p className="text-sm text-muted-foreground">Your summary will appear here</p>
+            </div>
           )}
+
           <Separator />
+
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium">History</h3>
-            <Button variant="ghost" size="sm" onClick={clearHistory}>
-              <Trash2 className="mr-2 h-4 w-4" />
-              Clear
-            </Button>
+            <h3 className="text-sm font-medium flex items-center gap-2">📚 Recent Summaries</h3>
+            {history.length > 0 && (
+              <Button variant="ghost" size="sm" onClick={clearHistory}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Clear
+              </Button>
+            )}
           </div>
-          <ul className="space-y-3">
-            {history.length === 0 && <li className="text-sm text-muted-foreground">No summaries yet.</li>}
+          <div className="space-y-3 max-h-64 overflow-y-auto">
+            {history.length === 0 && (
+              <div className="text-center py-4">
+                <div className="text-2xl mb-1">🕐</div>
+                <p className="text-xs text-muted-foreground">No summaries yet</p>
+              </div>
+            )}
             {history.map((h) => (
-              <li key={h.id} className="rounded-md border p-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="secondary" className="capitalize">
-                    {h.mode}
+              <div key={h.id} className="rounded-md border p-3 hover:bg-muted/30 transition-colors">
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <Badge variant="secondary" className="capitalize text-xs">
+                    {h.mode === "url" ? "🔗" : "📝"} {h.mode}
                   </Badge>
-                  <Badge className="bg-orange-600 text-white hover:bg-orange-700">{h.provider}</Badge>
-                  <span className="text-xs text-muted-foreground">{new Date(h.createdAt).toLocaleString()}</span>
+                  <Badge className="bg-orange-600 text-white hover:bg-orange-700 text-xs">{h.provider}</Badge>
+                  <span className="text-xs text-muted-foreground">{new Date(h.createdAt).toLocaleDateString()}</span>
                 </div>
-                <div className="mt-2 text-sm text-muted-foreground line-clamp-2">
-                  {h.mode === "url" ? h.url : h.text?.slice(0, 140) + (h.text && h.text.length > 140 ? "…" : "")}
+                <div className="text-xs text-muted-foreground line-clamp-2 mb-2">
+                  {h.mode === "url" ? h.url : h.text?.slice(0, 100) + (h.text && h.text.length > 100 ? "..." : "")}
                 </div>
-                <details className="mt-2">
-                  <summary className="cursor-pointer text-sm underline">View summary</summary>
-                  <pre className="mt-2 whitespace-pre-wrap break-words text-sm">{h.summary}</pre>
+                <details className="group">
+                  <summary className="cursor-pointer text-xs text-orange-600 dark:text-orange-400 hover:underline">
+                    View summary
+                  </summary>
+                  <div className="mt-2 p-2 bg-muted/50 rounded text-xs">
+                    <pre className="whitespace-pre-wrap break-words font-sans">{h.summary}</pre>
+                  </div>
                 </details>
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -25,7 +25,7 @@ export default function Page() {
                 <span className="text-orange-600 dark:text-orange-500">FlashRead</span> — Read faster. Understand more.
               </h1>
               <p className="mt-4 text-lg text-muted-foreground">
-                Paste a URL or drop in your text. Get clean, focused summaries using RapidAPI extraction and Groq-powered AI when you need extra brains. Built with shadcn/ui and Tailwind for a delightful, accessible experience. [^1]
+                Paste a URL or drop in your text. Get clean, focused summaries that highlight the key points, making it easier to grasp the essence of any content quickly.
               </p>
               <div className="mt-6 flex flex-wrap items-center gap-3">
                 <a href="#summarizer">
@@ -90,13 +90,13 @@ export default function Page() {
         <Summarizer defaultProvider="rapidapi" />
       </section>
 
-      <footer className="mt-auto border-t py-8">
-        <div className="container mx-auto px-4 flex flex-col items-center justify-between gap-4 sm:flex-row">
+      <footer className="mt-auto border-t py-3 fixed bottom-0 left-0 w-full bg-white/80 dark:bg-zinc-950/80 backdrop-blur z-50">
+        <div className="container mx-auto px-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Image src="/images/FlashRead.png" alt="FlashRead" width={28} height={28} />
-            <span className="font-semibold">FlashRead</span>
+        <Image src="/images/FlashRead.png" alt="FlashRead" width={22} height={22} />
+        <span className="font-semibold text-sm">FlashRead</span>
           </div>
-          <p className="text-sm text-muted-foreground">Made with ❤️ using Next.js, shadcn/ui, and Tailwind</p>
+          <p className="text-xs text-muted-foreground">Developed by Fred Juma</p>
         </div>
       </footer>
     </main>

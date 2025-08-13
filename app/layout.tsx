@@ -10,9 +10,9 @@ import "./globals.css"
 import { ThemeProvider } from "next-themes"
 
 export const metadata: Metadata = {
-  title: "v0 App",
-  description: "Created with v0",
-  generator: "v0.app",
+  title: "flahread",
+  description: "Use AI to summarize your favorite websites and texts.",
+  //generator: "Next.js",
 }
 
 export default function RootLayout({
@@ -21,17 +21,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <head>
-        <style>{`
-html {
-  font-family: ${GeistSans.style.fontFamily};
-  --font-sans: ${GeistSans.variable};
-  --font-mono: ${GeistMono.variable};
-}
-        `}</style>
-      </head>
-      <body>
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={`${GeistSans.variable} ${GeistMono.variable}`}
+        style={{ fontFamily: GeistSans.style.fontFamily }}
+      >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           {children}
           <Toaster />
