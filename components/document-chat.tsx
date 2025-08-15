@@ -35,11 +35,12 @@ export default function DocumentChat({
   initialMessages = [],
   onMessagesChange,
 }: DocumentChatProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages)
+  const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const initializedRef = useRef(false)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -49,9 +50,14 @@ export default function DocumentChat({
     scrollToBottom()
   }, [messages])
 
+  // Initialize messages only once
   useEffect(() => {
-    // Only add welcome message if we don't have any messages and have content
-    if ((documentContent || summary) && messages.length === 0) {
+    if (initializedRef.current) return
+
+    if (initialMessages.length > 0) {
+      setMessages(initialMessages)
+      initializedRef.current = true
+    } else if ((documentContent || summary) && messages.length === 0) {
       const welcomeMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: "assistant",
@@ -59,17 +65,22 @@ export default function DocumentChat({
         timestamp: new Date(),
       }
       setMessages([welcomeMessage])
+      initializedRef.current = true
     }
-  }, [documentContent, summary, documentName]) // Removed messages.length dependency to prevent infinite loop
+  }, []) // Empty dependency array - only run once
 
+  // Handle prop changes after initialization
   useEffect(() => {
-    if (initialMessages.length > 0) {
+    if (!initializedRef.current) return
+
+    if (initialMessages.length > 0 && messages.length === 0) {
       setMessages(initialMessages)
     }
   }, [initialMessages])
 
+  // Notify parent of message changes (only after initialization)
   useEffect(() => {
-    if (onMessagesChange) {
+    if (initializedRef.current && onMessagesChange && messages.length > 0) {
       onMessagesChange(messages)
     }
   }, [messages, onMessagesChange])
@@ -84,11 +95,20 @@ export default function DocumentChat({
       timestamp: new Date(),
     }
 
-    setMessages((prev) => [...prev, userMessage])
+    const newMessages = [...messages, userMessage]
+    setMessages(newMessages)
     setInput("")
     setIsLoading(true)
 
     try {
+      console.log("Sending to chat API:", {
+        message: input.trim(),
+        documentContent: documentContent || summary,
+        documentName,
+        hasContent: !!(documentContent || summary),
+        contentLength: (documentContent || summary || "").length,
+      })
+
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
@@ -99,7 +119,7 @@ export default function DocumentChat({
           message: input.trim(),
           documentContent: documentContent || summary,
           documentName,
-          chatHistory: messages.slice(-10),
+          chatHistory: newMessages.slice(-10),
         }),
       })
 
@@ -119,6 +139,7 @@ export default function DocumentChat({
 
       setMessages((prev) => [...prev, assistantMessage])
     } catch (error) {
+      console.error("Chat error:", error)
       toast.error(error instanceof Error ? error.message : "Failed to send message")
 
       const errorMessage: ChatMessage = {
@@ -171,6 +192,11 @@ export default function DocumentChat({
               {documentName}
             </Badge>
           )}
+          {(documentContent || summary) && (
+            <Badge variant="outline" className="text-xs">
+              {((documentContent || summary || "").length / 1000).toFixed(1)}k chars
+            </Badge>
+          )}
         </div>
         <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
           <MoreVertical className="h-4 w-4" />
@@ -190,6 +216,11 @@ export default function DocumentChat({
                 Ask me anything about your document. I can explain concepts, summarize sections, or answer specific
                 questions.
               </p>
+              {!(documentContent || summary) && (
+                <p className="text-orange-600 dark:text-orange-400 text-sm mt-2 font-medium">
+                  ⚠️ No document content loaded. Upload a document first.
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -270,7 +301,7 @@ export default function DocumentChat({
       </div>
 
       {/* Suggested Questions */}
-      {messages.length === 1 && !isLoading && (
+      {messages.length === 1 && !isLoading && (documentContent || summary) && (
         <div className="px-4 py-2 border-t bg-white/50 dark:bg-zinc-950/50">
           <p className="text-xs text-muted-foreground mb-2">💡 Try asking:</p>
           <div className="flex flex-wrap gap-2">
@@ -299,8 +330,12 @@ export default function DocumentChat({
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Ask a question about the document..."
-              disabled={isLoading}
+              placeholder={
+                documentContent || summary
+                  ? "Ask a question about the document..."
+                  : "Upload a document first to start chatting..."
+              }
+              disabled={isLoading || !(documentContent || summary)}
               className="pr-12 py-3 rounded-xl border-orange-200/50 focus:border-orange-400 focus:ring-orange-200 dark:border-orange-800/50 dark:focus:border-orange-600 bg-white/90 dark:bg-zinc-900/90"
             />
             <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
@@ -309,7 +344,7 @@ export default function DocumentChat({
           </div>
           <Button
             onClick={sendMessage}
-            disabled={!input.trim() || isLoading}
+            disabled={!input.trim() || isLoading || !(documentContent || summary)}
             className="bg-orange-600 hover:bg-orange-700 text-white rounded-xl px-4 py-3 shadow-lg hover:shadow-xl transition-all duration-200"
           >
             <Send className="h-4 w-4" />

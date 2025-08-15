@@ -25,16 +25,31 @@ type Length = "short" | "medium" | "detailed"
 
 interface HistoryItem {
   id: string
-  mode: "url" | "text"
+  mode: "url" | "text" | "document"
   url?: string
   text?: string
+  documentName?: string
   provider: Provider
   length: Length
   summary: string
   createdAt: number
 }
 
+interface ProcessedDocument {
+  id: string
+  fileName: string
+  fileType: string
+  fileSize: number
+  extractedText: string
+  wordCount: number
+  charCount: number
+  summary?: string
+  status: "processing" | "completed" | "error"
+  error?: string
+}
+
 const LS_HISTORY = "flashread_history"
+const LS_DOCUMENTS = "flashread_documents"
 
 export default function Summarizer({ defaultProvider = "rapidapi" as Provider }) {
   const [mode, setMode] = useState<"url" | "text">("url")
@@ -46,23 +61,37 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
   const [summary, setSummary] = useState("")
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [activeTab, setActiveTab] = useState("summarize")
-  const [chatMessages, setChatMessages] = useState<any[]>([])
-  const [persistedChatData, setPersistedChatData] = useState<{
-    messages: any[]
-    documentContent?: string
-    documentName?: string
-  }>({
-    messages: [],
-    documentContent: undefined,
-    documentName: undefined,
-  })
+  const [currentChatDocument, setCurrentChatDocument] = useState<{
+    content: string
+    name: string
+  } | null>(null)
+  const [persistedDocuments, setPersistedDocuments] = useState<ProcessedDocument[]>([])
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(LS_HISTORY)
       if (raw) setHistory(JSON.parse(raw))
-    } catch {}
+
+      const docsRaw = localStorage.getItem(LS_DOCUMENTS)
+      if (docsRaw) {
+        const docs = JSON.parse(docsRaw)
+        console.log("Loaded documents from localStorage:", docs.length)
+        setPersistedDocuments(docs)
+      }
+    } catch (error) {
+      console.error("Error loading from localStorage:", error)
+    }
   }, [])
+
+  // Save documents to localStorage whenever they change
+  useEffect(() => {
+    try {
+      console.log("Saving documents to localStorage:", persistedDocuments.length)
+      localStorage.setItem(LS_DOCUMENTS, JSON.stringify(persistedDocuments))
+    } catch (error) {
+      console.error("Error saving to localStorage:", error)
+    }
+  }, [persistedDocuments])
 
   const canSubmit = useMemo(() => {
     if (mode === "url") return url.trim().length > 6 && url.startsWith("http")
@@ -114,10 +143,112 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
     }
   }
 
+  const summarizeDocument = async (document: ProcessedDocument) => {
+    setLoading(true)
+    setSummary("")
+
+    try {
+      const res = await fetch("/api/summarize", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-rapidapi-key": process.env.NEXT_PUBLIC_RAPIDAPI_KEY || "",
+          "x-groq-key": process.env.NEXT_PUBLIC_GROQ_KEY || "",
+        },
+        body: JSON.stringify({
+          mode: "text",
+          text: document.extractedText,
+          provider: "groq", // Use Groq for document processing
+          length,
+        }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data?.error || "Failed to summarize document")
+      }
+
+      setSummary(data.summary || "")
+
+      // Add to history
+      const item: HistoryItem = {
+        id: crypto.randomUUID(),
+        mode: "document",
+        documentName: document.fileName,
+        provider: "groq",
+        length,
+        summary: data.summary || "",
+        createdAt: Date.now(),
+      }
+      const newHistory = [item, ...history].slice(0, 50)
+      setHistory(newHistory)
+      localStorage.setItem(LS_HISTORY, JSON.stringify(newHistory))
+
+      // Switch to summarize tab to show results
+      setActiveTab("summarize")
+      toast.success(`✨ Document summarized successfully!`)
+    } catch (err: any) {
+      toast.error(err.message ?? "Failed to summarize document")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const chatWithDocument = (document: ProcessedDocument) => {
+    console.log("Setting up chat with document:", {
+      fileName: document.fileName,
+      contentLength: document.extractedText.length,
+      contentPreview: document.extractedText.slice(0, 200),
+    })
+
+    setCurrentChatDocument({
+      content: document.extractedText,
+      name: document.fileName,
+    })
+    setActiveTab("chat")
+    toast.success(`💬 Ready to chat with ${document.fileName}`)
+  }
+
+  const handleDocumentProcessed = (document: ProcessedDocument) => {
+    console.log("Document processed, adding to state:", document.fileName)
+    setPersistedDocuments((prev) => {
+      const existing = prev.find((doc) => doc.id === document.id)
+      if (existing) {
+        return prev.map((doc) => (doc.id === document.id ? document : doc))
+      }
+      return [...prev, document]
+    })
+    toast.success(`📄 ${document.fileName} is ready for analysis!`)
+  }
+
+  const handleDocumentRemoved = (documentId: string) => {
+    console.log("Removing document from state:", documentId)
+    setPersistedDocuments((prev) => {
+      const filtered = prev.filter((doc) => doc.id !== documentId)
+      console.log("Documents after removal:", filtered.length)
+      return filtered
+    })
+
+    // Force update localStorage immediately
+    setTimeout(() => {
+      const currentDocs = JSON.parse(localStorage.getItem(LS_DOCUMENTS) || "[]")
+      const updatedDocs = currentDocs.filter((doc: ProcessedDocument) => doc.id !== documentId)
+      localStorage.setItem(LS_DOCUMENTS, JSON.stringify(updatedDocs))
+      console.log("localStorage updated, remaining docs:", updatedDocs.length)
+    }, 100)
+  }
+
   const clearHistory = () => {
     localStorage.removeItem(LS_HISTORY)
     setHistory([])
     toast.success("🗑️ History cleared!")
+  }
+
+  const clearDocuments = () => {
+    console.log("Clearing all documents")
+    localStorage.removeItem(LS_DOCUMENTS)
+    setPersistedDocuments([])
+    toast.success("🗑️ Documents cleared!")
   }
 
   return (
@@ -125,7 +256,14 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="summarize">Summarize</TabsTrigger>
-          <TabsTrigger value="upload">Upload Docs</TabsTrigger>
+          <TabsTrigger value="upload">
+            Upload Docs
+            {persistedDocuments.length > 0 && (
+              <Badge variant="secondary" className="ml-2 text-xs">
+                {persistedDocuments.length}
+              </Badge>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="chat">Chat</TabsTrigger>
           <TabsTrigger value="edit">Edit & Export</TabsTrigger>
         </TabsList>
@@ -296,11 +434,9 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
                       <Button
                         variant="outline"
                         onClick={() => {
-                          // Prepare chat data with current summary
-                          setPersistedChatData({
-                            messages: [],
-                            documentContent: summary,
-                            documentName: "Current Summary",
+                          setCurrentChatDocument({
+                            content: summary,
+                            name: "Current Summary",
                           })
                           setActiveTab("chat")
                         }}
@@ -349,7 +485,7 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
                     <div key={h.id} className="rounded-md border p-3 hover:bg-muted/30 transition-colors">
                       <div className="flex flex-wrap items-center gap-2 mb-2">
                         <Badge variant="secondary" className="capitalize text-xs">
-                          {h.mode === "url" ? "🔗" : "📝"} {h.mode}
+                          {h.mode === "url" ? "🔗" : h.mode === "text" ? "📝" : "📄"} {h.mode}
                         </Badge>
                         <Badge className="bg-orange-600 text-white hover:bg-orange-700 text-xs">{h.provider}</Badge>
                         <span className="text-xs text-muted-foreground">
@@ -359,7 +495,9 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
                       <div className="text-xs text-muted-foreground line-clamp-2 mb-2">
                         {h.mode === "url"
                           ? h.url
-                          : h.text?.slice(0, 100) + (h.text && h.text.length > 100 ? "..." : "")}
+                          : h.mode === "document"
+                            ? h.documentName
+                            : h.text?.slice(0, 100) + (h.text && h.text.length > 100 ? "..." : "")}
                       </div>
                       <details className="group">
                         <summary className="cursor-pointer text-xs text-orange-600 dark:text-orange-400 hover:underline">
@@ -378,25 +516,30 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
         </TabsContent>
 
         <TabsContent value="upload" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium">📂 Your Documents</h3>
+            {persistedDocuments.length > 0 && (
+              <Button variant="outline" size="sm" onClick={clearDocuments}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Clear All Documents
+              </Button>
+            )}
+          </div>
           <DocumentUpload
-            onFileProcessed={(file) => {
-              console.log("File processed:", file)
-            }}
+            onDocumentProcessed={handleDocumentProcessed}
+            onChatWithDocument={chatWithDocument}
+            onSummarizeDocument={summarizeDocument}
+            onDocumentRemoved={handleDocumentRemoved}
+            persistedDocuments={persistedDocuments}
           />
         </TabsContent>
 
         <TabsContent value="chat" className="h-[calc(100vh-200px)]">
           <DocumentChat
-            documentContent={persistedChatData.documentContent || summary}
-            documentName={persistedChatData.documentName || "Current Summary"}
+            documentContent={currentChatDocument?.content || summary}
+            documentName={currentChatDocument?.name || "Current Summary"}
             summary={summary}
-            initialMessages={persistedChatData.messages}
-            onMessagesChange={(messages) => {
-              setPersistedChatData((prev) => ({
-                ...prev,
-                messages,
-              }))
-            }}
+            key={`${currentChatDocument?.name}-${currentChatDocument?.content?.length || 0}`}
           />
         </TabsContent>
 

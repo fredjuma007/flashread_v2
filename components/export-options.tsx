@@ -246,7 +246,7 @@ export default function ExportOptions({ content, filename = "flashread-summary",
                         variant="secondary"
                         className="text-xs bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300"
                       >
-                        Premium
+                        Premium (coming soon)
                       </Badge>
                     )}
                   </div>
@@ -263,7 +263,7 @@ export default function ExportOptions({ content, filename = "flashread-summary",
         {selectedFormatData?.premium && (
           <div className="rounded-lg border border-orange-200 bg-orange-50 p-3 dark:border-orange-800 dark:bg-orange-950/20">
             <p className="text-sm text-orange-700 dark:text-orange-300">
-              💎 Premium format - Advanced export options available with FlashRead Pro
+              💎 Premium format - Advanced export options available with FlashRead Pro (Coming soon)
             </p>
           </div>
         )}
