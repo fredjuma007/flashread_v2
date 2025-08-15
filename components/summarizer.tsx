@@ -15,7 +15,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
-import { Loader2, Trash2, Sparkles, Zap, MessageCircle, Edit3 } from "lucide-react"
+import { Loader2, Trash2, Sparkles, Zap, MessageCircle, Edit3, Wand2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
 import MarkdownRenderer from "./markdown-renderer"
@@ -51,6 +51,135 @@ interface ProcessedDocument {
 const LS_HISTORY = "flashread_history"
 const LS_DOCUMENTS = "flashread_documents"
 
+// Diverse demo articles covering various topics and audiences
+const DEMO_ARTICLES = [
+  // Technology & Development
+  {
+    url: "https://blog.vercel.com/what-is-next-js",
+    title: "What is Next.js? - Vercel Blog",
+    description: "Learn about the React framework that powers modern web development",
+    category: "💻 Tech",
+  },
+  {
+    url: "https://github.blog/2023-11-08-universe-2023-copilot-transforms-github-into-the-ai-powered-developer-platform/",
+    title: "GitHub Universe 2023: AI-Powered Development",
+    description: "How GitHub Copilot is transforming software development",
+    category: "🤖 AI",
+  },
+
+  // News & Current Affairs
+  {
+    url: "https://www.bbc.com/news/science-environment-67861148",
+    title: "Climate Change and Renewable Energy - BBC News",
+    description: "Latest developments in global climate action and clean energy",
+    category: "🌍 News",
+  },
+  {
+    url: "https://www.reuters.com/business/healthcare-pharmaceuticals/",
+    title: "Healthcare Innovation - Reuters",
+    description: "Breaking news in medical research and healthcare technology",
+    category: "🏥 Health",
+  },
+
+  // Wikipedia Articles
+  {
+    url: "https://en.wikipedia.org/wiki/Artificial_intelligence",
+    title: "Artificial Intelligence - Wikipedia",
+    description: "Comprehensive overview of AI history, applications, and impact",
+    category: "📚 Wikipedia",
+  },
+  {
+    url: "https://en.wikipedia.org/wiki/Climate_change",
+    title: "Climate Change - Wikipedia",
+    description: "Scientific understanding of global climate change and its effects",
+    category: "🌡️ Science",
+  },
+  {
+    url: "https://en.wikipedia.org/wiki/Space_exploration",
+    title: "Space Exploration - Wikipedia",
+    description: "History and future of human space exploration missions",
+    category: "🚀 Space",
+  },
+
+  // Research & Studies
+  {
+    url: "https://www.nature.com/articles/d41586-023-03023-4",
+    title: "Nature: Latest Scientific Research",
+    description: "Cutting-edge research findings from the world's leading science journal",
+    category: "🔬 Research",
+  },
+  {
+    url: "https://hbr.org/2023/11/how-generative-ai-is-changing-creative-work",
+    title: "Harvard Business Review: AI and Creative Work",
+    description: "How artificial intelligence is transforming creative industries",
+    category: "💼 Business",
+  },
+
+  // Educational & General Interest
+  {
+    url: "https://www.ted.com/talks/brene_brown_the_power_of_vulnerability",
+    title: "TED Talk: The Power of Vulnerability",
+    description: "Brené Brown's influential talk on courage, vulnerability, and connection",
+    category: "🎤 Education",
+  },
+  {
+    url: "https://www.nationalgeographic.com/environment/article/plastic-pollution",
+    title: "National Geographic: Plastic Pollution",
+    description: "In-depth look at the global plastic pollution crisis and solutions",
+    category: "🌊 Environment",
+  },
+
+  // History & Culture
+  {
+    url: "https://www.smithsonianmag.com/history/",
+    title: "Smithsonian: Historical Discoveries",
+    description: "Fascinating stories from history and archaeological discoveries",
+    category: "🏛️ History",
+  },
+  {
+    url: "https://www.bbc.com/culture/article/20231201-the-greatest-films-of-all-time",
+    title: "BBC Culture: Greatest Films of All Time",
+    description: "Critical analysis of cinema's most influential masterpieces",
+    category: "🎬 Culture",
+  },
+
+  // Health & Wellness
+  {
+    url: "https://www.mayoclinic.org/healthy-lifestyle/nutrition-and-healthy-eating/in-depth/mediterranean-diet/art-20047801",
+    title: "Mayo Clinic: Mediterranean Diet Guide",
+    description: "Evidence-based guide to the Mediterranean diet and its health benefits",
+    category: "🥗 Health",
+  },
+  {
+    url: "https://www.who.int/news-room/fact-sheets/detail/mental-disorders",
+    title: "WHO: Mental Health Facts",
+    description: "World Health Organization's comprehensive mental health overview",
+    category: "🧠 Mental Health",
+  },
+
+  // Economics & Finance
+  {
+    url: "https://www.economist.com/finance-and-economics/2023/11/30/the-future-of-cryptocurrency",
+    title: "The Economist: Future of Cryptocurrency",
+    description: "Economic analysis of digital currencies and blockchain technology",
+    category: "💰 Economics",
+  },
+
+  // Alternative reliable sources for variety
+  {
+    url: "https://www.scientificamerican.com/article/quantum-computing-breakthrough/",
+    title: "Scientific American: Quantum Computing",
+    description: "Latest breakthroughs in quantum computing research and applications",
+    category: "⚛️ Quantum",
+  },
+  {
+    url: "https://www.openai.com/blog/chatgpt",
+    title: "Introducing ChatGPT - OpenAI",
+    description: "The story behind the AI assistant that changed everything",
+    category: "🤖 AI",
+  },
+]
+
 export default function Summarizer({ defaultProvider = "rapidapi" as Provider }) {
   const [mode, setMode] = useState<"url" | "text">("url")
   const [url, setUrl] = useState("")
@@ -83,6 +212,16 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
     }
   }, [])
 
+  // Listen for magic demo trigger
+  useEffect(() => {
+    const handleMagicDemo = () => {
+      triggerMagicDemo()
+    }
+
+    window.addEventListener("triggerMagicDemo", handleMagicDemo)
+    return () => window.removeEventListener("triggerMagicDemo", handleMagicDemo)
+  }, [])
+
   // Save documents to localStorage whenever they change
   useEffect(() => {
     try {
@@ -97,6 +236,34 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
     if (mode === "url") return url.trim().length > 6 && url.startsWith("http")
     return text.trim().length > 10
   }, [mode, url, text])
+
+  const triggerMagicDemo = async () => {
+    // Pick a random demo article from the diverse collection
+    const demoArticle = DEMO_ARTICLES[Math.floor(Math.random() * DEMO_ARTICLES.length)]
+
+    // Show exciting toast with category
+    toast.success(`🎭 Magic Demo: ${demoArticle.category}`, {
+      description: `"${demoArticle.title}" - ${demoArticle.description}`,
+      duration: 5000,
+    })
+
+    // Set the URL and switch to URL mode
+    setMode("url")
+    setUrl(demoArticle.url)
+    setProvider("rapidapi") // Use RapidAPI for URLs
+    setLength("medium")
+
+    // Scroll to summarizer section
+    document.getElementById("summarizer")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    })
+
+    // Wait a moment for the UI to update, then auto-submit
+    setTimeout(() => {
+      submit()
+    }, 1000)
+  }
 
   const submit = async () => {
     setLoading(true)
@@ -275,7 +442,18 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
               <CardHeader>
                 <CardTitle className="flex items-center justify-between text-lg">
                   <span>Summarize Content</span>
-                  <Badge className="bg-orange-600 text-white hover:bg-orange-700">Free</Badge>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={triggerMagicDemo}
+                      className="border-purple-200 hover:bg-purple-50 dark:border-purple-800 dark:hover:bg-purple-950/20 text-purple-700 dark:text-purple-300 bg-transparent"
+                    >
+                      <Wand2 className="mr-1 h-3 w-3" />
+                      Magic Demo
+                    </Button>
+                    <Badge className="bg-orange-600 text-white hover:bg-orange-700">Free</Badge>
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4 md:space-y-5">
@@ -458,7 +636,18 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
                 ) : (
                   <div className="text-center py-8">
                     <div className="text-4xl mb-2">📚</div>
-                    <p className="text-sm text-muted-foreground">Your summary will appear here</p>
+                    <p className="text-sm text-muted-foreground mb-3">Your summary will appear here</p>
+                    <Button
+                      variant="ghost"
+                      onClick={triggerMagicDemo}
+                      className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300"
+                    >
+                      <Wand2 className="mr-2 h-4 w-4" />
+                      Try Magic Demo
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      🎭 Random articles from News, Wikipedia, Research & more!
+                    </p>
                   </div>
                 )}
 
@@ -517,7 +706,7 @@ export default function Summarizer({ defaultProvider = "rapidapi" as Provider })
 
         <TabsContent value="upload" className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium">📂 Your Documents</h3>
+            <h2 className="text-xl font-semibold">Document Upload & Processing</h2>
             {persistedDocuments.length > 0 && (
               <Button variant="outline" size="sm" onClick={clearDocuments}>
                 <Trash2 className="mr-2 h-4 w-4" />

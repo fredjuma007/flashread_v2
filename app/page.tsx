@@ -1,17 +1,17 @@
+"use client"
+
 import Image from "next/image"
-import Link from "next/link"
-import { ArrowRight, BookOpenText, Zap, ShieldCheck, History, Sparkles } from "lucide-react"
+import { ArrowRight, BookOpenText, Zap, ShieldCheck, History, Sparkles, Wand2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import Summarizer from "@/components/summarizer"
 import Navbar from "@/components/navbar"
 import HeroDemo from "@/components/hero-demo"
-import Footer from "@/components/footer"
 
 export default function Page() {
   return (
-    <main className="min-h-dvh flex flex-col pb-16 md:pb-0">
+    <main className="min-h-screen flex flex-col">
       <Navbar />
       <section className="relative overflow-hidden">
         <div
@@ -39,15 +39,18 @@ export default function Page() {
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </a>
-                <Link
-                  href="https://flashread.netlify.app/"
-                  target="_blank"
-                  className="w-full sm:w-auto inline-flex h-10 items-center justify-center rounded-md border
-                   border-input bg-background px-4 text-sm font-medium shadow-sm transition-colors 
-                   hover:bg-accent hover:text-accent-foreground"
+                <Button
+                  id="magic-demo-btn"
+                  variant="outline"
+                  className="w-full sm:w-auto border-purple-200 hover:bg-purple-50 dark:border-purple-800 dark:hover:bg-purple-950/20 text-purple-700 dark:text-purple-300 hover:text-purple-800 dark:hover:text-purple-200 transition-all duration-200 hover:scale-105 bg-transparent"
+                  onClick={() => {
+                    // Trigger the magic demo
+                    const event = new CustomEvent("triggerMagicDemo")
+                    window.dispatchEvent(event)
+                  }}
                 >
-                  Legacy version 🌐
-                </Link>
+                  <Wand2 className="mr-2 h-4 w-4" />✨ Magic Demo
+                </Button>
               </div>
               <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
                 <Card className="border-orange-100/70 dark:border-orange-900/40">
@@ -84,13 +87,25 @@ export default function Page() {
         </div>
       </section>
 
-      <section id="summarizer" className="container mx-auto px-4 py-8 md:py-10 lg:py-14">
+      <section id="summarizer" className="container mx-auto px-4 py-8 md:py-10 lg:py-14 flex-1">
         <Summarizer defaultProvider="rapidapi" />
       </section>
 
-{/*footer*/}
-<Footer />
-
+      <footer className="border-t py-4 bg-white/80 dark:bg-zinc-950/80 backdrop-blur mt-auto">
+        <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Image
+              src="/images/FlashRead.png"
+              alt="FlashRead"
+              width={20}
+              height={20}
+              className="sm:w-[22px] sm:h-[22px]"
+            />
+            <span className="font-semibold text-sm">FlashRead</span>
+          </div>
+          <p className="text-xs text-muted-foreground">Developed by Fred Juma</p>
+        </div>
+      </footer>
     </main>
   )
 }
